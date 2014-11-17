@@ -22,7 +22,7 @@ WVPASS bup random 1k > src-1/1
 WVPASS bup index src-1
 WVPASS bup save --strip -n src-1 src-1
 
-WVPASS bup gc -v
+WVPASS bup gc $GC_OPTS -v
 
 WVPASS bup restore -C "$tmpdir/restore" /src-1/latest
 WVPASS compare-trees src-1/ "$tmpdir/restore/latest/"
@@ -34,7 +34,7 @@ WVPASS bup random 10M > src-2/1
 WVPASS bup index src-2
 WVPASS bup save --strip -n src-2 src-2
 
-WVPASS bup gc -v
+WVPASS bup gc $GC_OPTS -v
 
 WVPASS rm -r "$tmpdir/restore"
 WVPASS bup restore -C "$tmpdir/restore" /src-1/latest
@@ -48,7 +48,7 @@ WVSTART "gc (removed branch)"
 
 size_before=$(WVPASS du -k -s "$BUP_DIR" | WVPASS cut -f1) || exit $?
 WVPASS rm "$BUP_DIR/refs/heads/src-2"
-WVPASS bup gc -v
+WVPASS bup gc $GC_OPTS -v
 size_after=$(WVPASS du -k -s "$BUP_DIR" | WVPASS cut -f1) || exit $?
 
 WVPASS [ "$size_before" -gt 5000 ]
@@ -78,7 +78,7 @@ WVPASS bup save -vvv --strip -n a src-ab/a
 
 size_before=$(WVPASS du -k -s "$BUP_DIR" | WVPASS cut -f1) || exit $?
 WVPASS rm "$BUP_DIR/refs/heads/src-ab"
-WVPASS bup gc -v
+WVPASS bup gc $GC_OPTS -v
 size_after=$(WVPASS du -k -s "$BUP_DIR" | WVPASS cut -f1) || exit $?
 
 WVPASS [ "$size_before" -gt 5000 ]

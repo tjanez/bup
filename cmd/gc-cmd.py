@@ -9,6 +9,7 @@ bup gc [options...]
 --
 v,verbose   increase log output (can be used more than once)
 threshold   only rewrite a packfile if it's over this percent garbage [10]
+breadcrumbs remember past travels when determining what to keep (requires RAM)
 #,compress= set compression level to # (0-9, 9 is highest) [1]
 """
 
@@ -98,13 +99,21 @@ def find_live_objects(existing_count, cat_pipe, opt):
     # FIXME: allow selection of k?
     # FIXME: support ephemeral bloom filters (i.e. *never* written to disk)
     live_objs = bloom.create(bloom_filename, expected=existing_count, k=None)
+    stop_at, trees_visited = None, None
+    if opt.breadcrumbs:
+        trees_visited = set()
+        stop_at = lambda (x): x in trees_visited
     for ref_name, ref_id in git.list_refs():
         for id, type in walk_object(cat_pipe, ref_id.encode('hex'), opt.verbose,
                                     parent_path=[ref_name],
-                                    stop_at=None,
+                                    stop_at=stop_at,
                                     include_data=None):
             # FIXME: batch ids
-            live_objs.add(id.decode('hex'))
+            bin_id = id.decode('hex')
+            if trees_visited and type == 'tree':
+                trees_visited.add(bin_id)
+            live_objs.add(bin_id)
+    trees_visited = None
     if opt.verbose:
         log('gc: expecting to retain about %.2f%% unnecessary objects\n'
             % live_objs.pfalse_positive())
