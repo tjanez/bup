@@ -33,6 +33,10 @@
 #include <sys/ioctl.h>
 #endif
 
+#ifdef HAVE_TM_TM_GMTOFF
+#include <time.h>
+#endif
+
 #include "bupsplit.h"
 
 #if defined(FS_IOC_GETFLAGS) && defined(FS_IOC_SETFLAGS)
@@ -1290,6 +1294,30 @@ static PyObject *bup_fstat(PyObject *self, PyObject *args)
 }
 
 
+#ifdef HAVE_TM_TM_GMTOFF
+static PyObject *bup_localtime(PyObject *self, PyObject *args)
+{
+    long long lltime;
+    time_t ttime;
+    if (!PyArg_ParseTuple(args, "L", &lltime))
+	return NULL;
+    if (!INTEGRAL_ASSIGNMENT_FITS(&ttime, lltime))
+        return PyErr_Format(PyExc_OverflowError, "time value too large");
+
+    struct tm tm;
+    tzset();
+    if(localtime_r(&ttime, &tm) == NULL) // Assume tzset() already called.
+        return PyErr_SetFromErrno(PyExc_IOError);
+
+    return Py_BuildValue("[i,i,i,i,i,i,i,i,i,i,s]",
+                         1900 + tm.tm_year, tm.tm_mon + 1, tm.tm_mday,
+                         tm.tm_hour, tm.tm_min, tm.tm_sec,
+                         tm.tm_wday, tm.tm_yday + 1,
+                         tm.tm_isdst, tm.tm_gmtoff, tm.tm_zone);
+}
+#endif /* def HAVE_TM_TM_GMTOFF */
+
+
 static PyMethodDef helper_methods[] = {
     { "write_sparsely", bup_write_sparsely, METH_VARARGS,
       "Write buf excepting zeros at the end. Return trailing zero count." },
@@ -1348,6 +1376,10 @@ static PyMethodDef helper_methods[] = {
       "Extended version of lstat." },
     { "fstat", bup_fstat, METH_VARARGS,
       "Extended version of fstat." },
+#ifdef HAVE_TM_TM_GMTOFF
+    { "localtime", bup_localtime, METH_VARARGS,
+      "Returns struct_time elements including the timezone offset and name." },
+#endif
     { NULL, NULL, 0, NULL },  // sentinel
 };
 
@@ -1364,6 +1396,8 @@ PyMODINIT_FUNC init_helpers(void)
     // Just be sure (relevant when passing timestamps back to Python above).
     assert(sizeof(PY_LONG_LONG) <= sizeof(long long));
     assert(sizeof(unsigned PY_LONG_LONG) <= sizeof(unsigned long long));
+
+    tzset();
 
     char *e;
     PyObject *m = Py_InitModule("_helpers", helper_methods);

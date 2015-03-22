@@ -1,5 +1,6 @@
 """Helper functions and classes for bup."""
 
+from collections import namedtuple
 from ctypes import sizeof, c_void_p
 from os import environ
 from contextlib import contextmanager
@@ -7,7 +8,6 @@ import sys, os, pwd, subprocess, errno, socket, select, mmap, stat, re, struct
 import hashlib, heapq, operator, time, grp, tempfile
 
 from bup import _helpers
-import bup._helpers as _helpers
 import math
 
 # This function should really be in helpers, not in bup.options.  But we
@@ -987,4 +987,24 @@ def grafted_path_components(graft_points, path):
             return result
     return path_components(clean_path)
 
+
 Sha1 = hashlib.sha1
+
+_localtime = getattr(_helpers, 'localtime', None)
+
+if _localtime:
+    struct_time = namedtuple('struct_time', ['tm_year', 'tm_mon', 'tm_mday',
+                                             'tm_hour', 'tm_min', 'tm_sec',
+                                             'tm_wday', 'tm_yday',
+                                             'tm_isdst', 'tm_gmtoff', 'tm_zone'])
+    if _localtime:
+        def localtime(time):
+            return struct_time(*_helpers.localtime(time))
+        def gmtoffz(t):
+            off = localtime(t).tm_gmtoff
+            hrs = off / 60 / 60
+            return "%+03d%02d" % (hrs, abs(off - (hrs * 60 * 60)))
+    else:
+        localtime = time.localtime
+        def gmtoffz(t):
+            return time.strftime('%z', helpers.localtime(t))
