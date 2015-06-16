@@ -11,7 +11,7 @@ realpath()
 {
     test "$#" -eq 1 || return $?
     echo "$1" | \
-        PYTHONPATH="$bup_t_lib_script_home/../lib" python -c \
+        PYTHONPATH="$bup_t_lib_script_home/../lib" $PYTHON -c \
         "import sys, bup.helpers; print bup.helpers.realpath(sys.stdin.readline())" \
         || return $?
 }

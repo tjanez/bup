@@ -138,7 +138,7 @@ symlink_date="$(WVPASS echo "$symlink_bup_info" \
     || exit $?
 
 if test "$(uname -s)" != NetBSD; then
-    symlink_size="$(WVPASS python -c "import os
+    symlink_size="$(WVPASS $PYTHON -c "import os
 print os.lstat('src/symlink').st_size")" || exit $?
 else
     # NetBSD appears to return varying sizes, so for now, just ignore it.
@@ -148,9 +148,9 @@ else
 fi
 
 uid="$(id -u)" || exit $?
-gid="$(python -c 'import os; print os.stat("src").st_gid')" || exit $?
+gid="$($PYTHON -c 'import os; print os.stat("src").st_gid')" || exit $?
 user="$(id -un)" || exit $?
-group="$(python -c 'import grp, os;
+group="$($PYTHON -c 'import grp, os;
 print grp.getgrgid(os.stat("src").st_gid)[0]')" || exit $?
 
 WVPASSEQ "$(bup ls -l src/latest"$tmpdir"/src | tr -s ' ' ' ')" \
