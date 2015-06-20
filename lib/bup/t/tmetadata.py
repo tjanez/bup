@@ -52,6 +52,7 @@ def cleanup_testfs():
 
 @wvtest
 def test_clean_up_archive_path():
+    WVPASSEQ(helpers.saved_errors, [])
     cleanup = metadata._clean_up_path_for_archive
     WVPASSEQ(cleanup('foo'), 'foo')
     WVPASSEQ(cleanup('/foo'), 'foo')
@@ -70,10 +71,12 @@ def test_clean_up_archive_path():
     WVPASSEQ(cleanup('/////.'), '.')
     WVPASSEQ(cleanup('/../'), '.')
     WVPASSEQ(cleanup(''), '.')
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_risky_path():
+    WVPASSEQ(helpers.saved_errors, [])
     risky = metadata._risky_path
     WVPASS(risky('/foo'))
     WVPASS(risky('///foo'))
@@ -90,10 +93,12 @@ def test_risky_path():
     WVFAIL(risky('./foo/.'))
     WVFAIL(risky('foo/bar'))
     WVFAIL(risky('foo/./bar'))
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_clean_up_extract_path():
+    WVPASSEQ(helpers.saved_errors, [])
     cleanup = metadata._clean_up_extract_path
     WVPASSEQ(cleanup('/foo'), 'foo')
     WVPASSEQ(cleanup('///foo'), 'foo')
@@ -114,10 +119,12 @@ def test_clean_up_extract_path():
     WVPASSEQ(cleanup('./'), './')
     WVPASSEQ(cleanup('///foo/bar'), 'foo/bar')
     WVPASSEQ(cleanup('///foo/bar'), 'foo/bar')
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_metadata_method():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tmetadata-')
     bup_dir = tmpdir + '/bup'
@@ -150,6 +157,7 @@ def test_metadata_method():
             WVPASS(m.mtime == 0)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 def _first_err():
@@ -160,6 +168,7 @@ def _first_err():
 
 @wvtest
 def test_from_path_error():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     if is_superuser() or detect_fakeroot():
         return
@@ -179,6 +188,7 @@ def test_from_path_error():
     if wvfailure_count() == initial_failures:
         subprocess.call(['chmod', '-R', 'u+rwX', tmpdir])
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 def _linux_attr_supported(path):
@@ -197,6 +207,7 @@ def _linux_attr_supported(path):
 
 @wvtest
 def test_apply_to_path_restricted_access():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     if is_superuser() or detect_fakeroot():
         return
@@ -225,10 +236,12 @@ def test_apply_to_path_restricted_access():
     if wvfailure_count() == initial_failures:
         subprocess.call(['chmod', '-R', 'u+rwX', tmpdir])
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_restore_over_existing_target():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tmetadata-')
     path = tmpdir + '/foo'
@@ -260,6 +273,7 @@ def test_restore_over_existing_target():
     WVEXCEPT(Exception, dir_m.create_path, path, create_symlinks=True)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 from bup.metadata import posix1e
@@ -273,6 +287,7 @@ from bup.metadata import xattr
 if xattr:
     @wvtest
     def test_handling_of_incorrect_existing_linux_xattrs():
+        WVPASSEQ(helpers.saved_errors, [])
         if not is_superuser() or detect_fakeroot():
             WVMSG('skipping test -- not superuser')
             return
@@ -299,3 +314,4 @@ if xattr:
         WVPASSEQ(xattr.get(path, 'user.foo'), 'bar')
         os.chdir(start_dir)
         cleanup_testfs()
+        WVPASSEQ(helpers.saved_errors, [])

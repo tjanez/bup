@@ -1,6 +1,9 @@
-from bup import hashsplit, _helpers
-from wvtest import *
 from cStringIO import StringIO
+
+from wvtest import *
+
+from bup import hashsplit, _helpers, helpers
+
 
 def nr_regions(x, max_count=None):
     return list(hashsplit._nonresident_page_regions(''.join(map(chr, x)),
@@ -8,6 +11,7 @@ def nr_regions(x, max_count=None):
 
 @wvtest
 def test_nonresident_page_regions():
+    WVPASSEQ(helpers.saved_errors, [])
     WVPASSEQ(nr_regions([]), [])
     WVPASSEQ(nr_regions([1]), [])
     WVPASSEQ(nr_regions([0]), [(0, 1)])
@@ -38,10 +42,12 @@ def test_nonresident_page_regions():
     WVPASSEQ(nr_regions([1, 0, 0, 0, 1], 2), [(1, 2), (3, 1)])
     WVPASSEQ(nr_regions([1, 0, 0, 0, 1], 3), [(1, 3)])
     WVPASSEQ(nr_regions([1, 0, 0, 0, 1], 4), [(1, 3)])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_uncache_ours_upto():
+    WVPASSEQ(helpers.saved_errors, [])
     history = []
     def mock_fadvise_pages_done(f, ofs, len):
         history.append((f, ofs, len))
@@ -74,14 +80,18 @@ def test_uncache_ours_upto():
         WVPASSEQ([(42, 0, 3), (42, 5, 2)], history)
     finally:
         hashsplit._fadvise_pages_done = orig_pages_done
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_rolling_sums():
+    WVPASSEQ(helpers.saved_errors, [])
     WVPASS(_helpers.selftest())
+    WVPASSEQ(helpers.saved_errors, [])
 
 @wvtest
 def test_fanout_behaviour():
+    WVPASSEQ(helpers.saved_errors, [])
 
     # Drop in replacement for bupsplit, but splitting if the int value of a
     # byte >= BUP_BLOBBITS
@@ -125,3 +135,4 @@ def test_fanout_behaviour():
     hashsplit.BLOB_MAX = old_BLOB_MAX
     hashsplit.BLOB_READ_SIZE = old_BLOB_READ_SIZE
     hashsplit.fanout = old_fanout
+    WVPASSEQ(helpers.saved_errors, [])

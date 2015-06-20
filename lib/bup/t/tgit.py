@@ -1,8 +1,9 @@
-import struct, os, tempfile, time
-from subprocess import check_call
-from bup import git
-from bup.helpers import *
+import struct, os, subprocess, tempfile, time
+
 from wvtest import *
+
+from bup import git, helpers
+from bup.helpers import log, readpipe
 
 
 top_dir = os.path.realpath('../../..')
@@ -13,7 +14,7 @@ bup_tmp = top_dir + '/t/tmp'
 def exc(*cmd):
     cmd_str = ' '.join(cmd)
     print >> sys.stderr, cmd_str
-    check_call(cmd)
+    subprocess.check_call(cmd)
 
 
 def exo(*cmd):
@@ -24,6 +25,7 @@ def exo(*cmd):
 
 @wvtest
 def testmangle():
+    WVPASSEQ(helpers.saved_errors, [])
     afile  = 0100644
     afile2 = 0100770
     alink  = 0120000
@@ -47,10 +49,12 @@ def testmangle():
     # versions might implement a .bup[a-z] extension as something other
     # than BUP_NORMAL.
     WVPASSEQ(git.demangle_name("f.bupa"), ("f.bupa", git.BUP_NORMAL))
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def testencode():
+    WVPASSEQ(helpers.saved_errors, [])
     s = 'hello world'
     looseb = ''.join(git._encode_looseobj('blob', s))
     looset = ''.join(git._encode_looseobj('tree', s))
@@ -64,10 +68,12 @@ def testencode():
     WVPASSEQ(git._decode_packobj(packb), ('blob', s))
     WVPASSEQ(git._decode_packobj(packt), ('tree', s))
     WVPASSEQ(git._decode_packobj(packc), ('commit', s))
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def testpacks():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tgit-')
     os.environ['BUP_MAIN_EXE'] = bup_exe
@@ -111,9 +117,11 @@ def testpacks():
     WVFAIL(r.exists('\0'*20))
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 @wvtest
 def test_pack_name_lookup():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tgit-')
     os.environ['BUP_MAIN_EXE'] = bup_exe
@@ -139,10 +147,12 @@ def test_pack_name_lookup():
             WVPASSEQ(r.exists(hashes[i], want_source=True), idxname)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_long_index():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tgit-')
     os.environ['BUP_MAIN_EXE'] = bup_exe
@@ -172,10 +182,12 @@ def test_long_index():
     if wvfailure_count() == initial_failures:
         os.remove(name)
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_check_repo_or_die():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     orig_cwd = os.getcwd()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tgit-')
@@ -207,10 +219,12 @@ def test_check_repo_or_die():
         os.chdir(orig_cwd)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_commit_parsing():
+    WVPASSEQ(helpers.saved_errors, [])
     def restore_env_var(name, val):
         if val is None:
             del os.environ[name]
@@ -282,10 +296,12 @@ def test_commit_parsing():
         restore_env_var('GIT_COMMITTER_EMAIL', orig_committer_email)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_list_refs():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tgit-')
     os.environ['BUP_MAIN_EXE'] = bup_exe
@@ -335,3 +351,4 @@ def test_list_refs():
     WVPASSEQ(frozenset(git.list_refs(limit_to_tags=True)), expected_tags)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])

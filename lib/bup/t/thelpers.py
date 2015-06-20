@@ -1,18 +1,21 @@
-import helpers
 import math
 import os
 import os.path
 import tempfile
 import stat
-import bup._helpers as _helpers
-from bup.helpers import *
+
 from wvtest import *
+
+from bup import helpers
+from bup.helpers import *
+import bup._helpers as _helpers
 
 bup_tmp = os.path.realpath('../../../t/tmp')
 mkdirp(bup_tmp)
 
 @wvtest
 def test_next():
+    WVPASSEQ(helpers.saved_errors, [])
     # Test whatever you end up with for next() after import '*'.
     WVPASSEQ(next(iter([]), None), None)
     x = iter([1])
@@ -25,10 +28,12 @@ def test_next():
     x = iter([1])
     WVPASSEQ(next(x), 1)
     WVEXCEPT(StopIteration, next, x)
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_fallback_next():
+    WVPASSEQ(helpers.saved_errors, [])
     global next
     orig = next
     next = helpers._fallback_next
@@ -36,10 +41,12 @@ def test_fallback_next():
         test_next()
     finally:
         next = orig
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_parse_num():
+    WVPASSEQ(helpers.saved_errors, [])
     pn = parse_num
     WVPASSEQ(pn('1'), 1)
     WVPASSEQ(pn('0'), 0)
@@ -47,26 +54,32 @@ def test_parse_num():
     WVPASSEQ(pn('2 gb'), 2*1024*1024*1024)
     WVPASSEQ(pn('1e+9 k'), 1000000000 * 1024)
     WVPASSEQ(pn('-3e-3mb'), int(-0.003 * 1024 * 1024))
+    WVPASSEQ(helpers.saved_errors, [])
 
 @wvtest
 def test_detect_fakeroot():
+    WVPASSEQ(helpers.saved_errors, [])
     if os.getenv('FAKEROOTKEY'):
         WVPASS(detect_fakeroot())
     else:
         WVPASS(not detect_fakeroot())
+    WVPASSEQ(helpers.saved_errors, [])
 
 @wvtest
 def test_path_components():
+    WVPASSEQ(helpers.saved_errors, [])
     WVPASSEQ(path_components('/'), [('', '/')])
     WVPASSEQ(path_components('/foo'), [('', '/'), ('foo', '/foo')])
     WVPASSEQ(path_components('/foo/'), [('', '/'), ('foo', '/foo')])
     WVPASSEQ(path_components('/foo/bar'),
              [('', '/'), ('foo', '/foo'), ('bar', '/foo/bar')])
     WVEXCEPT(Exception, path_components, 'foo')
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_stripped_path_components():
+    WVPASSEQ(helpers.saved_errors, [])
     WVPASSEQ(stripped_path_components('/', []), [('', '/')])
     WVPASSEQ(stripped_path_components('/', ['']), [('', '/')])
     WVPASSEQ(stripped_path_components('/', ['/']), [('', '/')])
@@ -83,10 +96,12 @@ def test_stripped_path_components():
     WVPASSEQ(stripped_path_components('/foo/bar/baz', ['/foo/bar/baz']),
              [('', '/foo/bar/baz')])
     WVEXCEPT(Exception, stripped_path_components, 'foo', [])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_grafted_path_components():
+    WVPASSEQ(helpers.saved_errors, [])
     WVPASSEQ(grafted_path_components([('/chroot', '/')], '/foo'),
              [('', '/'), ('foo', '/foo')])
     WVPASSEQ(grafted_path_components([('/foo/bar', '/')], '/foo/bar/baz/bax'),
@@ -113,20 +128,24 @@ def test_grafted_path_components():
              [('', None), ('a', None), ('b', None), ('c', '/'),
               ('foo', '/foo'), ('bar', '/foo/bar')])
     WVEXCEPT(Exception, grafted_path_components, 'foo', [])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_readpipe():
+    WVPASSEQ(helpers.saved_errors, [])
     x = readpipe(['echo', '42'])
     WVPASSEQ(x, '42\n')
     try:
         readpipe(['bash', '-c', 'exit 42'])
     except Exception, ex:
         WVPASSEQ(str(ex), "subprocess 'bash -c exit 42' failed with status 42")
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_batchpipe():
+    WVPASSEQ(helpers.saved_errors, [])
     for chunk in batchpipe(['echo'], []):
         WVPASS(False)
     out = ''
@@ -150,10 +169,12 @@ def test_batchpipe():
     WVPASSEQ(next(batches), '0 1 2\n')
     WVPASSEQ(next(batches), '3 4\n')
     WVPASSEQ(next(batches, None), None)
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_atomically_replaced_file():
+    WVPASSEQ(helpers.saved_errors, [])
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-thelper-')
     target_file = os.path.join(tmpdir, 'test-atomic-write')
     initial_failures = wvfailure_count()
@@ -179,3 +200,4 @@ def test_atomically_replaced_file():
 
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])

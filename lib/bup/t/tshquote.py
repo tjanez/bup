@@ -1,11 +1,13 @@
-from bup import shquote
 from wvtest import *
+
+from bup import helpers, shquote
 
 def qst(line):
     return [word for offset,word in shquote.quotesplit(line)]
 
 @wvtest
 def test_shquote():
+    WVPASSEQ(helpers.saved_errors, [])
     WVPASSEQ(qst("""  this is    basic \t\n\r text  """),
              ['this', 'is', 'basic', 'text'])
     WVPASSEQ(qst(r""" \"x\" "help" 'yelp' """), ['"x"', 'help', 'yelp'])
@@ -45,3 +47,4 @@ def test_shquote():
 
     WVPASSEQ(shquote.quotify_list(['a', '', '"word"', "'third'", "'", "x y"]),
              "a '' '\"word\"' \"'third'\" \"'\" 'x y'")
+    WVPASSEQ(helpers.saved_errors, [])

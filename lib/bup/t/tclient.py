@@ -1,7 +1,9 @@
 import sys, os, stat, time, random, subprocess, glob, tempfile
-from bup import client, git
-from bup.helpers import mkdirp
+
 from wvtest import *
+
+from bup import client, git, helpers
+from bup.helpers import mkdirp
 
 bup_tmp = os.path.realpath('../../../t/tmp')
 mkdirp(bup_tmp)
@@ -20,6 +22,7 @@ IDX_PAT = '/*.idx'
     
 @wvtest
 def test_server_split_with_indexes():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tclient-')
     os.environ['BUP_MAIN_EXE'] = '../../../bup'
@@ -37,10 +40,12 @@ def test_server_split_with_indexes():
     rw.new_blob(s1)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
     
 
 @wvtest
 def test_multiple_suggestions():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tclient-')
     os.environ['BUP_MAIN_EXE'] = '../../../bup'
@@ -74,10 +79,12 @@ def test_multiple_suggestions():
     WVPASSEQ(len(glob.glob(c.cachedir+IDX_PAT)), 3)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_dumb_client_server():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tclient-')
     os.environ['BUP_MAIN_EXE'] = '../../../bup'
@@ -99,10 +106,12 @@ def test_dumb_client_server():
     WVPASSEQ(len(glob.glob(c.cachedir+IDX_PAT)), 2)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_midx_refreshing():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tclient-')
     os.environ['BUP_MAIN_EXE'] = bupmain = '../../../bup'
@@ -141,10 +150,12 @@ def test_midx_refreshing():
     WVPASSEQ(len(pi.packs), 1)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_remote_parsing():
+    WVPASSEQ(helpers.saved_errors, [])
     tests = (
         (':/bup', ('file', None, None, '/bup')),
         ('file:///bup', ('file', None, None, '/bup')),
@@ -162,3 +173,4 @@ def test_remote_parsing():
         WVFAIL()
     except client.ClientError:
         WVPASS()
+    WVPASSEQ(helpers.saved_errors, [])

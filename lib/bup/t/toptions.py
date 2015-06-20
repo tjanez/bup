@@ -1,9 +1,10 @@
-from bup import options
 from wvtest import *
 
+from bup import helpers, options
 
 @wvtest
 def test_optdict():
+    WVPASSEQ(helpers.saved_errors, [])
     d = options.OptDict({
         'x': ('x', False),
         'y': ('y', False),
@@ -27,6 +28,7 @@ def test_optdict():
     WVPASSEQ(d.no_z, False)
     WVPASSEQ(d.no_other_thing, True)
     WVEXCEPT(KeyError, lambda: d.p)
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 invalid_optspec0 = """
@@ -46,9 +48,11 @@ x,y
 
 @wvtest
 def test_invalid_optspec():
+    WVPASSEQ(helpers.saved_errors, [])
     WVPASS(options.Options(invalid_optspec0).parse([]))
     WVPASS(options.Options(invalid_optspec1).parse([]))
     WVPASS(options.Options(invalid_optspec2).parse([]))
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 optspec = """
@@ -73,6 +77,7 @@ x,extended,no-simple   extended mode [2]
 
 @wvtest
 def test_options():
+    WVPASSEQ(helpers.saved_errors, [])
     o = options.Options(optspec)
     (opt,flags,extra) = o.parse(['-tttqp', 7, '--longoption', '19',
                                  'hanky', '--onlylong', '-7'])
@@ -101,3 +106,4 @@ def test_options():
     WVPASSEQ((opt.smart, opt.no_smart), (True, False))
     WVPASSEQ((opt.x, opt.extended, opt.no_simple), (0,0,0))
     WVPASSEQ((opt.no_x, opt.no_extended, opt.simple), (True,True,True))
+    WVPASSEQ(helpers.saved_errors, [])

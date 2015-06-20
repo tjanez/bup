@@ -1,13 +1,16 @@
-import errno, platform, tempfile
-from bup import bloom
-from bup.helpers import *
+import errno, platform, subprocess, tempfile
+
 from wvtest import *
 
+from bup import bloom
+import bup.helpers as helpers
+
 bup_tmp = os.path.realpath('../../../t/tmp')
-mkdirp(bup_tmp)
+helpers.mkdirp(bup_tmp)
 
 @wvtest
 def test_bloom():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tbloom-')
     hashes = [os.urandom(20) for i in range(100)]
@@ -57,3 +60,4 @@ def test_bloom():
         WVPASSEQ(b.k, 4)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])

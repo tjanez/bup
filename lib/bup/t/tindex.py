@@ -1,16 +1,23 @@
 import os
-import time, tempfile
-from bup import index, metadata
-from bup.helpers import *
-import bup.xstat as xstat
+import tempfile
+import time
+import subprocess
+
 from wvtest import *
+
+from bup import index, metadata
+from bup.helpers import mkdirp, saved_errors
+import bup.helpers as helpers
+import bup.xstat as xstat
 
 lib_t_dir = os.getcwd()
 bup_tmp = os.path.realpath('../../../t/tmp')
 mkdirp(bup_tmp)
 
+
 @wvtest
 def index_basic():
+    WVPASSEQ(helpers.saved_errors, [])
     cd = os.path.realpath('../../../t')
     WVPASS(cd)
     sd = os.path.realpath(cd + '/sampledata')
@@ -20,10 +27,12 @@ def index_basic():
              sd + '/var/abs-symlink-target')
     WVPASSEQ(index.realpath(cd + '/sampledata/var/abs-symlink'),
              sd + '/var/abs-symlink')
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def index_writer():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tindex-')
     orig_cwd = os.getcwd()
@@ -44,6 +53,7 @@ def index_writer():
         os.chdir(orig_cwd)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 def dump(m):
@@ -65,6 +75,7 @@ def eget(l, ename):
 
 @wvtest
 def index_negative_timestamps():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tindex-')
     # Makes 'foo' exist
@@ -90,10 +101,12 @@ def index_negative_timestamps():
     WVPASS()
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def index_dirty():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     orig_cwd = os.getcwd()
     tmpdir = tempfile.mkdtemp(dir=bup_tmp, prefix='bup-tindex-')
@@ -185,3 +198,4 @@ def index_dirty():
         os.chdir(orig_cwd)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])

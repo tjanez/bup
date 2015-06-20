@@ -1,12 +1,15 @@
 import math, tempfile, subprocess
+
 from wvtest import *
+
+from bup import helpers, xstat
 import bup._helpers as _helpers
-from bup import xstat
 
 bup_tmp = os.path.realpath('../../../t/tmp')
 
 @wvtest
 def test_fstime():
+    WVPASSEQ(helpers.saved_errors, [])
     WVPASSEQ(xstat.timespec_to_nsecs((0, 0)), 0)
     WVPASSEQ(xstat.timespec_to_nsecs((1, 0)), 10**9)
     WVPASSEQ(xstat.timespec_to_nsecs((0, 10**9 / 2)), 500000000)
@@ -53,10 +56,12 @@ def test_fstime():
     WVPASSEQ(xstat.fstime_floor_secs(-10**9), -1)
     WVPASSEQ(type(xstat.fstime_floor_secs(10**9 / 2)), type(0))
     WVPASSEQ(type(xstat.fstime_floor_secs(-10**9 / 2)), type(0))
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_bup_utimensat():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     if not xstat._bup_utimensat:
         return
@@ -74,10 +79,12 @@ def test_bup_utimensat():
     WVPASS(mtime_ts[1] == 0 or mtime_ts[1] == frac_ts[1])
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_bup_utimes():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     if not xstat._bup_utimes:
         return
@@ -95,10 +102,12 @@ def test_bup_utimes():
     WVPASS(mtime_ts[1] == 0 or mtime_ts[1] == frac_ts[1] * 1000)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
 
 
 @wvtest
 def test_bup_lutimes():
+    WVPASSEQ(helpers.saved_errors, [])
     initial_failures = wvfailure_count()
     if not xstat._bup_lutimes:
         return
@@ -116,3 +125,4 @@ def test_bup_lutimes():
     WVPASS(mtime_ts[1] == 0 or mtime_ts[1] == frac_ts[1] * 1000)
     if wvfailure_count() == initial_failures:
         subprocess.call(['rm', '-rf', tmpdir])
+    WVPASSEQ(helpers.saved_errors, [])
